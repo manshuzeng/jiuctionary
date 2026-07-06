@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词典 · LexBridge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&family=Noto+Serif+SC:wght@400;600&display=swap');
+
+  :root {
+    --ink: #1a1a1a;
+    --ink-mid: #555;
+    --ink-light: #999;
+    --border: #e8e4de;
+    --bg: #faf8f4;
+    --bg-card: #ffffff;
+    --accent: #c0392b;
+    --accent-light: #fdf0ee;
+    --accent-mid: #e8a9a3;
+    --teal: #1a6b5a;
+    --teal-light: #eaf4f1;
+    --amber: #8a6000;
+    --amber-light: #fef8ec;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .logo span {
+    color: var(--ink-light);
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    margin-left: 4px;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .mode-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .mode-toggle button {
+    border: none;
+    background: transparent;
+    padding: 5px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  .nav-btn {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--ink-mid);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .nav-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .nav-btn .count {
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    font-size: 10px;
+    padding: 1px 6px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  main { flex: 1; max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; width: 100%; }
+
+  .edit-banner {
+    background: var(--teal-light);
+    border: 1px solid #a7d4c8;
+    color: var(--teal);
+    border-radius: var(--radius);
+    padding: 0.7rem 1.1rem;
+    font-size: 0.82rem;
+    margin-bottom: 1.5rem;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+  }
+  .edit-banner.show { display: flex; }
+
+  .search-wrapper { position: relative; margin-bottom: 2rem; }
+  .search-row { display: flex; gap: 0.5rem; }
+
+  #search-input {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.15rem;
+    padding: 0.85rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search-input:focus { border-color: var(--accent-mid); }
+  #search-input::placeholder { color: var(--ink-light); font-weight: 300; }
+
+  #search-btn {
+    padding: 0 1.4rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #search-btn:hover { opacity: 0.88; }
+  #search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .hint { font-size: 0.78rem; color: var(--ink-light); margin-top: 0.5rem; padding-left: 0.2rem; }
+
+  .result-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.6rem 1.8rem;
+    margin-bottom: 1.1rem;
+    animation: fadeUp 0.25s ease;
+  }
+  .result-card.editing { border-color: var(--teal); border-width: 1.5px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 0.8rem;
+  }
+
+  .word-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+  .word-main { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 600; color: var(--ink); line-height: 1.1; }
+  .word-pos { font-size: 0.78rem; color: var(--ink-light); font-style: italic; margin-left: 2px; }
+
+  .phonetic {
+    font-size: 0.95rem; color: var(--accent); font-weight: 400; letter-spacing: 0.5px;
+    margin-bottom: 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .phonetic:hover { opacity: 0.75; }
+  .phonetic::before { content: '▶'; font-size: 9px; opacity: 0.7; }
+
+  .chinese-main { font-family: 'Noto Serif SC', serif; font-size: 1.5rem; font-weight: 600; color: var(--ink); margin-bottom: 0.5rem; }
+  .en-definition { font-size: 0.92rem; color: var(--ink-mid); line-height: 1.65; margin-bottom: 0.5rem; }
+
+  .phrase-list { display: flex; flex-direction: column; gap: 1rem; }
+  .phrase-en { font-size: 0.92rem; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+  .phrase-en em { font-style: normal; color: var(--accent); font-weight: 600; }
+  .phrase-cn { font-size: 0.82rem; color: var(--ink-light); margin-bottom: 4px; font-family: 'Noto Serif SC', serif; }
+  .phrase-example {
+    font-size: 0.85rem; color: var(--ink-mid); padding: 5px 10px;
+    border-left: 2.5px solid var(--accent-mid); background: var(--accent-light);
+    border-radius: 0 6px 6px 0; line-height: 1.5;
+  }
+
+  .translation-option { padding: 1rem 0; border-bottom: 1px solid var(--border); }
+  .translation-option:last-child { border-bottom: none; }
+  .option-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.7rem; flex-wrap: wrap; }
+  .option-en { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--ink); }
+  .option-phonetic { font-size: 0.82rem; color: var(--accent); cursor: pointer; }
+  .option-phonetic:hover { opacity: 0.7; }
+  .option-pos { font-size: 0.75rem; color: var(--ink-light); font-style: italic; }
+
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.3px; }
+  .tag-formal { background: var(--teal-light); color: var(--teal); }
+  .tag-casual { background: var(--amber-light); color: var(--amber); }
+  .tag-common { background: var(--accent-light); color: var(--accent); }
+
+  .editable {
+    outline: none;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .edit-on .editable {
+    background: var(--teal-light);
+    padding: 2px 6px;
+    border: 1px dashed #a7d4c8;
+    cursor: text;
+    display: inline-block;
+    min-width: 30px;
+  }
+  .edit-on .editable:focus { background: white; border-color: var(--teal); border-style: solid; }
+  .edit-on .phrase-example .editable { display: inline; }
+
+  .card-actions {
+    display: flex; gap: 0.5rem; margin-top: 1.2rem; padding-top: 1rem;
+    border-top: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .action-btn {
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-mid);
+    padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .action-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .action-btn.primary { background: var(--teal); color: white; border-color: var(--teal); }
+  .action-btn.primary:hover { opacity: 0.88; color: white; }
+  .action-btn.saved { background: var(--teal-light); color: var(--teal); border-color: #a7d4c8; }
+
+  .loading { text-align: center; padding: 3rem 1rem; color: var(--ink-light); font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg { color: var(--accent); background: var(--accent-light); border: 1px solid var(--accent-mid); border-radius: var(--radius); padding: 1rem 1.2rem; font-size: 0.88rem; line-height: 1.5; }
+
+  .welcome { text-align: center; padding: 3rem 1rem; color: var(--ink-light); }
+  .welcome h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--ink-mid); margin-bottom: 0.5rem; font-weight: 400; }
+  .welcome p { font-size: 0.9rem; line-height: 1.7; }
+  .examples-row { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 1.2rem; }
+  .example-chip { padding: 5px 14px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.82rem; cursor: pointer; color: var(--ink-mid); background: var(--bg-card); transition: all 0.15s; }
+  .example-chip:hover { border-color: var(--accent-mid); color: var(--accent); background: var(--accent-light); }
+
+  .result-type-indicator { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-light); margin-bottom: 0.6rem; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .dot-en { background: var(--accent); }
+  .dot-cn { background: var(--teal); }
+
+  .api-key-notice { background: var(--amber-light); border: 1px solid #e8c870; border-radius: var(--radius); padding: 1rem 1.2rem; font-size: 0.85rem; line-height: 1.6; color: var(--amber); margin-bottom: 1.5rem; }
+  .api-key-notice strong { color: #6a4800; }
+  .key-input-row { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+  .key-input-row input { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 0.8rem; border: 1px solid #e8c870; border-radius: 8px; background: white; color: var(--ink); outline: none; }
+  .key-input-row button { padding: 0.5rem 1rem; background: var(--amber); color: white; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; }
+  .key-input-row button:hover { opacity: 0.85; }
+
+  .saved-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 0.9rem 1.2rem; margin-bottom: 0.6rem; cursor: pointer;
+    display: flex; align-items: center; gap: 1rem; transition: all 0.15s;
+  }
+  .saved-item:hover { border-color: var(--accent-mid); box-shadow: var(--shadow); }
+  .saved-word { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: var(--ink); }
+  .saved-word.cn { font-family: 'Noto Serif SC', serif; }
+  .saved-meta { font-size: 0.78rem; color: var(--ink-light); margin-left: auto; }
+  .saved-delete { color: var(--ink-light); cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 14px; }
+  .saved-delete:hover { color: var(--accent); background: var(--accent-light); }
+
+  @media (max-width: 520px) {
+    header { padding: 0.8rem 1rem; }
+    main { padding: 1.2rem 1rem 3rem; }
+    .result-card { padding: 1.2rem 1.1rem; }
+    .word-main { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">词典 <span>LexBridge</span></div>
+  <div class="header-right">
+    <button class="nav-btn" id="saved-nav" onclick="showSaved()">★ My words <span class="count" id="saved-count">0</span></button>
+    <div class="mode-toggle">
+      <button id="view-mode" class="active" onclick="setMode('view')">View</button>
+      <button id="edit-mode" onclick="setMode('edit')">Edit</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="api-notice" class="api-key-notice" style="display:none;">
+    <strong>Enter your Anthropic API key to start</strong> — it stays in your browser only (localStorage), never sent anywhere except the Anthropic API directly.
+    <div class="key-input-row">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+      <button onclick="saveKey()">Save</button>
+    </div>
+  </div>
+
+  <div class="edit-banner" id="edit-banner">
+    ✎ Edit mode is on. Click any highlighted text to change it, then <strong>Save to my dictionary</strong> to keep your version.
+  </div>
+
+  <div class="search-wrapper">
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="Type English or 中文..." autocomplete="off" />
+      <button id="search-btn" onclick="doSearch()">Translate</button>
+    </div>
+    <div class="hint">Press Enter to search &nbsp;·&nbsp; Saved words load instantly without using the API</div>
+  </div>
+
+  <div id="output">
+    <div class="welcome">
+      <h2>Your personal dictionary</h2>
+      <p>Search any English word or Chinese phrase.<br>Get pronunciation, definitions, common phrases, and real examples.</p>
+      <div class="examples-row">
+        <span class="example-chip" onclick="quickSearch('resilient')">resilient</span>
+        <span class="example-chip" onclick="quickSearch('ambiguous')">ambiguous</span>
+        <span class="example-chip" onclick="quickSearch('leverage')">leverage</span>
+        <span class="example-chip" onclick="quickSearch('委婉')">委婉</span>
+        <span class="example-chip" onclick="quickSearch('坚持')">坚持</span>
+        <span class="example-chip" onclick="quickSearch('敏感')">敏感</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const STORAGE_KEY = 'lexbridge_api_key';
+const DICT_KEY = 'lexbridge_saved_dict';
+let currentMode = 'view';
+let currentEntry = null;
+
+function getKey() { return localStorage.getItem(STORAGE_KEY) || ''; }
+function saveKey() {
+  const k = document.getElementById('api-key-input').value.trim();
+  if (k) {
+    localStorage.setItem(STORAGE_KEY, k);
+    document.getElementById('api-notice').style.display = 'none';
+    document.getElementById('search-input').focus();
+  }
+}
+function checkKey() {
+  if (!getKey()) { document.getElementById('api-notice').style.display = 'block'; return false; }
+  return true;
+}
+
+function getDict() {
+  try { return JSON.parse(localStorage.getItem(DICT_KEY) || '{}'); }
+  catch { return {}; }
+}
+function setDict(d) { localStorage.setItem(DICT_KEY, JSON.stringify(d)); updateSavedCount(); }
+function updateSavedCount() {
+  const n = Object.keys(getDict()).length;
+  document.getElementById('saved-count').textContent = n;
+}
+
+window.addEventListener('load', () => {
+  checkKey();
+  updateSavedCount();
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+});
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('view-mode').classList.toggle('active', mode === 'view');
+  document.getElementById('edit-mode').classList.toggle('active', mode === 'edit');
+  document.getElementById('edit-banner').classList.toggle('show', mode === 'edit');
+  document.body.classList.toggle('edit-on', mode === 'edit');
+  // re-render current entry to apply editable state
+  if (currentEntry) renderResult(currentEntry, currentEntry.__query || '');
+}
+
+function quickSearch(term) {
+  document.getElementById('search-input').value = term;
+  doSearch();
+}
+
+function isChinese(text) { return /[\u4e00-\u9fff]/.test(text); }
+
+function speak(text, lang) {
+  if ('speechSynthesis' in window) {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = lang || 'en-US';
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utt);
+  }
+}
+
+async function doSearch() {
+  const query = document.getElementById('search-input').value.trim();
+  if (!query) return;
+
+  // Check saved dictionary first — instant, no API cost
+  const dict = getDict();
+  const key = query.toLowerCase();
+  if (dict[key]) {
+    renderResult(dict[key], query, true);
+    return;
+  }
+
+  if (!checkKey()) return;
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true; btn.textContent = '···';
+  const out = document.getElementById('output');
+  out.innerHTML = `<div class="loading"><div class="spinner"></div><div>Looking up "${escHtml(query)}"…</div></div>`;
+
+  const isCN = isChinese(query);
+  const systemPrompt = `You are an expert bilingual English-Chinese lexicographer. Return ONLY valid JSON, no markdown, no explanation.
+
+For ENGLISH input, return:
+{
+  "type": "en",
+  "word": "...",
+  "pos": "...",
+  "ipa": "/.../ (IPA phonetic symbols, standard)",
+  "chinese_translations": ["primary", "secondary if applicable"],
+  "en_definition": "concise English definition in 1-2 sentences",
+  "phrases": [
+    { "phrase": "phrase with the keyword", "meaning_cn": "Chinese meaning", "example": "Short example.", "example_cn": "Chinese translation" }
+  ]
+}
+
+For CHINESE input, return:
+{
+  "type": "cn",
+  "input": "...",
+  "translations": [
+    { "en": "English word", "pos": "n./v./adj./adv.", "ipa": "/IPA/", "register": "common|formal|casual", "nuance_cn": "brief note in Chinese on usage difference",
+      "phrases": [ { "phrase": "phrase in English", "meaning_cn": "Chinese meaning", "example": "Short example.", "example_cn": "Chinese translation" } ] }
+  ]
+}
+
+Provide 4-6 phrases per word. Keep examples under 12 words. Focus phrases on preposition collocations and common combinations. IPA must be accurate.`;
+
+  const userMsg = isCN
+    ? `Look up this Chinese word/phrase: "${query}". Give all common English translations with nuance differences.`
+    : `Look up this English word: "${query}". Give Chinese translation, pronunciation, and common phrases.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (res.status === 401) throw new Error('Invalid API key. Please update it.');
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+    const data = await res.json();
+    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    renderResult(parsed, query);
+  } catch (e) {
+    out.innerHTML = `<div class="error-msg">⚠ ${escHtml(e.message)}</div>`;
+  }
+  btn.disabled = false; btn.textContent = 'Translate';
+}
+
+function ed(field, cls) {
+  // renders an editable-or-static span depending on mode
+  const editing = currentMode === 'edit';
+  const attr = editing ? `contenteditable="true"` : '';
+  return `<span class="editable ${cls || ''}" data-field="${field}" ${attr}>`;
+}
+
+function renderResult(data, query, fromSaved) {
+  const out = document.getElementById('output');
+  data.__query = query;
+  currentEntry = data;
+  const editingClass = currentMode === 'edit' ? 'editing' : '';
+  const savedBadge = fromSaved ? ' <span class="tag tag-formal" style="margin-left:8px;">saved</span>' : '';
+
+  if (data.type === 'en') {
+    const d = data;
+    const phonHtml = `<div class="phonetic" onclick="speak('${escHtml(d.word)}','en-US')">${ed('ipa')}${escHtml(d.ipa||'')}</span></div>`;
+    const cnTrans = (d.chinese_translations || []).join('  ·  ');
+    const phrasesHtml = (d.phrases || []).map((p, i) => `
+      <div class="phrase-item" data-idx="${i}">
+        <div class="phrase-en">${ed('phrase.'+i)}${escHtml(p.phrase)}</span></div>
+        <div class="phrase-cn">${ed('meaning_cn.'+i)}${escHtml(p.meaning_cn)}</span></div>
+        <div class="phrase-example">${ed('example.'+i)}${escHtml(p.example)}</span> <span style="color:var(--ink-light);font-size:0.8em;margin-left:6px;">${ed('example_cn.'+i)}${escHtml(p.example_cn||'')}</span></span></div>
+      </div>`).join('');
+
+    out.innerHTML = `
+      <div class="result-card ${editingClass}">
+        <div class="result-type-indicator"><span class="dot dot-en"></span> English → Chinese${savedBadge}</div>
+        <div class="word-header">
+          <div class="word-main">${ed('word')}${escHtml(d.word)}</span></div>
+          <span class="word-pos">${ed('pos')}${escHtml(d.pos||'')}</span></span>
+        </div>
+        ${phonHtml}
+        <div class="chinese-main">${ed('chinese_translations')}${escHtml(cnTrans)}</span></div>
+        <div class="en-definition">${ed('en_definition')}${escHtml(d.en_definition||'')}</span></div>
+        ${renderActions(query)}
+      </div>
+      ${d.phrases && d.phrases.length ? `
+      <div class="result-card ${editingClass}">
+        <div class="section-label">Common phrases &amp; collocations</div>
+        <div class="phrase-list">${phrasesHtml}</div>
+      </div>` : ''}`;
+  } else if (data.type === 'cn') {
+    const d = data;
+    const optionsHtml = (d.translations || []).map((t, ti) => {
+      const regTag = t.register === 'formal' ? `<span class="tag tag-formal">formal</span>`
+        : t.register === 'casual' ? `<span class="tag tag-casual">casual</span>`
+        : `<span class="tag tag-common">common</span>`;
+      const phonetic = `<span class="option-phonetic" onclick="speak('${escHtml(t.en)}','en-US')">${ed('t.'+ti+'.ipa')}${escHtml(t.ipa||'')}</span></span>`;
+      const phrasesHtml = (t.phrases || []).map((p, pi) => `
+        <div class="phrase-item">
+          <div class="phrase-en">${ed('t.'+ti+'.phrase.'+pi)}${escHtml(p.phrase)}</span></div>
+          <div class="phrase-cn">${ed('t.'+ti+'.meaning_cn.'+pi)}${escHtml(p.meaning_cn)}</span></div>
+          <div class="phrase-example">${ed('t.'+ti+'.example.'+pi)}${escHtml(p.example)}</span> <span style="color:var(--ink-light);font-size:0.8em;margin-left:6px;">${ed('t.'+ti+'.example_cn.'+pi)}${escHtml(p.example_cn||'')}</span></span></div>
+        </div>`).join('');
+      return `
+        <div class="translation-option">
+          <div class="option-header">
+            <span class="option-en">${ed('t.'+ti+'.en')}${escHtml(t.en)}</span></span>
+            ${phonetic}
+            <span class="option-pos">${ed('t.'+ti+'.pos')}${escHtml(t.pos||'')}</span></span>
+            ${regTag}
+          </div>
+          ${t.nuance_cn ? `<div style="font-size:0.82rem;color:var(--ink-light);margin-bottom:0.6rem;font-family:'Noto Serif SC',serif;">${ed('t.'+ti+'.nuance_cn')}${escHtml(t.nuance_cn)}</span></div>` : ''}
+          <div class="phrase-list">${phrasesHtml}</div>
+        </div>`;
+    }).join('');
+
+    out.innerHTML = `
+      <div class="result-card ${editingClass}">
+        <div class="result-type-indicator"><span class="dot dot-cn"></span> Chinese → English${savedBadge}</div>
+        <div class="chinese-main">${ed('input')}${escHtml(d.input)}</span></div>
+        <div class="section-label" style="margin-top:1rem;">Translation options</div>
+        ${optionsHtml}
+        ${renderActions(query)}
+      </div>`;
+  }
+}
+
+function renderActions(query) {
+  const dict = getDict();
+  const isSaved = !!dict[query.toLowerCase()];
+  return `
+    <div class="card-actions">
+      <button class="action-btn primary" onclick="saveEntry('${escHtml(query)}')">${isSaved ? '✓ Update saved' : '★ Save to my dictionary'}</button>
+      ${isSaved ? `<button class="action-btn" onclick="deleteEntry('${escHtml(query)}')">Remove</button>` : ''}
+      <button class="action-btn" onclick="copyEntry()">Copy</button>
+    </div>`;
+}
+
+function collectEdits() {
+  // read all editable fields back into currentEntry
+  if (currentMode !== 'edit') return currentEntry;
+  const e = JSON.parse(JSON.stringify(currentEntry));
+  document.querySelectorAll('.editable').forEach(el => {
+    const field = el.dataset.field;
+    const val = el.innerText.trim();
+    const parts = field.split('.');
+    if (parts[0] === 'word') e.word = val;
+    else if (parts[0] === 'pos') e.pos = val;
+    else if (parts[0] === 'ipa' && parts.length === 1) e.ipa = val;
+    else if (parts[0] === 'en_definition') e.en_definition = val;
+    else if (parts[0] === 'chinese_translations') e.chinese_translations = val.split(/\s*·\s*/);
+    else if (parts[0] === 'input') e.input = val;
+    else if (parts[0] === 'phrase' && e.phrases) e.phrases[+parts[1]].phrase = val;
+    else if (parts[0] === 'meaning_cn' && e.phrases) e.phrases[+parts[1]].meaning_cn = val;
+    else if (parts[0] === 'example' && e.phrases) e.phrases[+parts[1]].example = val;
+    else if (parts[0] === 'example_cn' && e.phrases) e.phrases[+parts[1]].example_cn = val;
+    else if (parts[0] === 't' && e.translations) {
+      const t = e.translations[+parts[1]];
+      const key = parts[2];
+      if (key === 'en') t.en = val;
+      else if (key === 'ipa') t.ipa = val;
+      else if (key === 'pos') t.pos = val;
+      else if (key === 'nuance_cn') t.nuance_cn = val;
+      else if (key === 'phrase') t.phrases[+parts[3]].phrase = val;
+      else if (key === 'meaning_cn') t.phrases[+parts[3]].meaning_cn = val;
+      else if (key === 'example') t.phrases[+parts[3]].example = val;
+      else if (key === 'example_cn') t.phrases[+parts[3]].example_cn = val;
+    }
+  });
+  return e;
+}
+
+function saveEntry(query) {
+  const entry = collectEdits();
+  delete entry.__query;
+  entry.__saved = Date.now();
+  const dict = getDict();
+  dict[query.toLowerCase()] = entry;
+  setDict(dict);
+  entry.__query = query;
+  currentEntry = entry;
+  renderResult(entry, query, false);
+  flashSaved();
+}
+
+function deleteEntry(query) {
+  const dict = getDict();
+  delete dict[query.toLowerCase()];
+  setDict(dict);
+  if (document.getElementById('saved-view')) showSaved();
+  else renderResult(currentEntry, query, false);
+}
+
+function flashSaved() {
+  const btn = document.querySelector('.action-btn.primary');
+  if (btn) { const t = btn.textContent; btn.textContent = '✓ Saved!'; btn.classList.add('saved'); setTimeout(() => { btn.textContent = t; btn.classList.remove('saved'); }, 1200); }
+}
+
+function copyEntry() {
+  const e = collectEdits();
+  navigator.clipboard.writeText(JSON.stringify(e, null, 2)).then(() => {
+    const btn = event.target;
+    const t = btn.textContent; btn.textContent = '✓ Copied';
+    setTimeout(() => btn.textContent = t, 1200);
+  });
+}
+
+function showSaved() {
+  const dict = getDict();
+  const out = document.getElementById('output');
+  const keys = Object.keys(dict).sort((a, b) => (dict[b].__saved||0) - (dict[a].__saved||0));
+  if (keys.length === 0) {
+    out.innerHTML = `<div class="welcome"><h2>No saved words yet</h2><p>Search a word, then tap ★ Save to build your personal dictionary.<br>Saved words load instantly and work offline.</p></div>`;
+    return;
+  }
+  const itemsHtml = keys.map(k => {
+    const e = dict[k];
+    const word = e.type === 'en' ? e.word : e.input;
+    const isCN = e.type === 'cn';
+    const meta = e.type === 'en' ? (e.chinese_translations||[]).join(' · ') : (e.translations||[]).map(t=>t.en).slice(0,3).join(', ');
+    return `<div class="saved-item" id="saved-view" onclick="loadSaved('${escHtml(k)}')">
+      <span class="saved-word ${isCN?'cn':''}">${escHtml(word)}</span>
+      <span class="saved-meta">${escHtml(meta)}</span>
+      <span class="saved-delete" onclick="event.stopPropagation();deleteEntry('${escHtml(k)}')">✕</span>
+    </div>`;
+  }).join('');
+  out.innerHTML = `
+    <div style="display:flex;align-items:center;margin-bottom:1rem;">
+      <div class="section-label" style="margin:0;">${keys.length} saved word${keys.length>1?'s':''}</div>
+      <button class="action-btn" style="margin-left:auto;" onclick="exportDict()">⬇ Export JSON</button>
+    </div>
+    ${itemsHtml}`;
+}
+
+function loadSaved(key) {
+  const dict = getDict();
+  if (dict[key]) { document.getElementById('search-input').value = key; renderResult(dict[key], key, true); }
+}
+
+function exportDict() {
+  const dict = getDict();
+  const blob = new Blob([JSON.stringify(dict, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'lexbridge-dictionary.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function escHtml(str) {
+  if (!str && str !== 0) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
